@@ -11,13 +11,14 @@ Parses three values from copied billing email text and creates an all-day BusyCa
 
 | Field | Notes |
 |---|---|
-| **Merchant** | Who the bill is from. For credit card statements, include both the issuer and the card name (e.g., `Chase Sapphire Preferred`, `Citi Double Cash`, `Amex Gold`). For other bills (utilities, subscriptions, etc.), use the company or service name (e.g., `Seattle City Light`, `Comcast`). Look for card names in the subject line, greeting, or account label. |
+| **Merchant** | Who the bill is from. For credit card statements, include both the issuer and the card name (e.g., `Chase Sapphire Preferred`, `Citi Double Cash`, `Amex Gold`). For other bills (utilities, subscriptions, etc.), use the company or service name (e.g., `Seattle City Light`, `Comcast`). Look for card names in the subject line, greeting, or account label. If only a generic issuer name is found (e.g., "Chase Credit Card", "Citi Card", "Bank of America Credit Card") with no specific product name, ask the user which card it is before proceeding. |
 | **Amount due** | The amount the user owes. If both a statement balance and a minimum payment are present, use the **statement balance**. Format as a dollar amount: `$142.50`. |
 | **Due date** | The payment due date. Parse natural language dates and convert to `YYYY-MM-DD`. |
 
 ## Handling missing or ambiguous values
 
 - **Merchant not found**: Ask the user — "I couldn't determine who this bill is from. Who is the merchant or creditor?"
+- **Generic card issuer** (e.g., "Chase Credit Card", "Citi Card", "Bank of America Credit Card" — issuer name present but no specific card product): Ask the user — "Which [Issuer] card is this? (e.g., Chase Sapphire Preferred, Chase Freedom Unlimited)"
 - **Amount not found**: Ask the user — "I couldn't find an amount due. What is the amount owed?"
 - **Due date not found or ambiguous**: Ask the user — "I couldn't determine the due date. When is this payment due?"
 - **Statement balance vs. minimum payment**: Always prefer the statement balance. Only use the minimum payment if no statement balance is present.
@@ -29,7 +30,7 @@ Resolve all missing fields before creating the event. If multiple values are mis
 Once all three values are confirmed, create the event with:
 
 - **Title**: `[Merchant] $[Amount]` — e.g., `Chase Sapphire Preferred $1,204.38` or `Comcast $89.99`
-- **Calendar**: Bills (`CALENDAR_ID`)
+- **Calendar**: Bills (`503D6615-1ED1-4165-BDFE-AEEB34B95E7F/CC7B6F11-AD99-4850-9BE2-BB24357D1313`)
 - **Date**: The due date as an all-day event (`allDay: true`, date-only `startDate`)
 - **Reminders**: Three alarms — 2 days before, 1 day before, and on the due date, each at 9 AM:
   - `alarms: [-2340, -900, 540]` (in minutes; all-day events start at midnight, so +540 min = 9 AM)
